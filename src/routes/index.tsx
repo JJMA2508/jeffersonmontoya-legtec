@@ -1,10 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Toaster } from "@/components/ui/sonner";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Hero } from "@/components/Hero";
 import { Specialization } from "@/components/Specialization";
 import { Philosophy } from "@/components/Philosophy";
-import { ContactForm } from "@/components/ContactForm";
+import { Contact } from "@/components/Contact";
 import { SiteFooter } from "@/components/SiteFooter";
 
 const TITLE = "Jefferson Montoya | LegalTech Strategist & AI Law Consultant";
@@ -59,10 +58,9 @@ function Index() {
         <Hero />
         <Specialization />
         <Philosophy />
-        <ContactForm />
+        <Contact />
       </main>
       <SiteFooter />
-      <Toaster />
     </div>
   );
 }
