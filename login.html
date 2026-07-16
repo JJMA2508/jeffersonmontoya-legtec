@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ordenis | Portal de Acceso Seguro</title>
+    <meta name="description" content="Área de inicio de sesión y registro seguro para ORDENIS Legal Asset Shield.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Cargar Motor de Inteligencia Artificial para Reconocimiento Facial -->
+    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+</head>
+
+<body>
+    <!-- Visual On-Screen Debugger for Silent JS Errors -->
+    <div id="debug-error-log" style="color: #ef4444; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 16px; margin: 2rem; border-radius: 8px; font-family: monospace; font-size: 0.85rem; display: none; z-index: 99999; position: relative; line-height: 1.5;">
+        <h3 style="margin-bottom: 8px; font-weight: bold; font-size: 0.95rem;">🚨 Error del Portal Detectado:</h3>
+    </div>
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            var errDiv = document.getElementById('debug-error-log');
+            if (errDiv) {
+                errDiv.style.display = 'block';
+                errDiv.innerHTML += '• <b>Mensaje:</b> ' + message + ' <br><b>Archivo:</b> ' + source.split('/').pop() + ' (Línea ' + lineno + ')<br><br>';
+            }
+            return false;
+        };
+    </script>
+
+    <!-- Botón de regreso al Landing -->
+    <a href="index.html" style="position: absolute; top: 2rem; left: 2rem; color: #fff; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; z-index: 100;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Volver
+    </a>
+
+    <div class="auth-container">
+        <!-- Panel Decorativo Izquierdo -->
+        <div class="auth-banner">
+            <div class="banner-content">
+                <div class="logo">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L3 6V11.5C3 16.92 6.89 21.92 12 23C17.11 21.92 21 16.92 21 11.5V6L12 2Z"
+                            stroke="url(#paint0_linear)" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path d="M9 12.25L11.25 14.5L15.35 9.5" stroke="url(#paint0_linear)" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                        <defs>
+                            <linearGradient id="paint0_linear" x1="3" y1="2" x2="21" y2="23"
+                                gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#3B82F6" />
+                                <stop offset="1" stop-color="#8B5CF6" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <span>ORDENIS</span>
+                </div>
+                <h1>Portal de Alta<br>Seguridad.</h1>
+                <p>Verifique su identidad o acceda a su bóveda descentralizada desde aquí.
+                </p>
+                <div class="glass-card">
+                    <div class="stat-item">
+                        <span class="stat-value">Firma KYC</span>
+                        <span class="stat-label">Autenticación Biométrica Requerida</span>
+                    </div>
+                </div>
+            </div>
+            <div class="glow-sphere"></div>
+        </div>
+
+        <!-- Panel de Autenticación Derecho -->
+        <div class="auth-forms-wrapper">
+            <div class="auth-forms" id="authForms">
+
+                <!-- Formulario de Inicio de Sesión -->
+                <div class="form-section" id="loginSection">
+                    <div class="form-header">
+                        <h2>Acceso a Bóveda</h2>
+                        <p>Ingrese sus credenciales en el entorno seguro.</p>
+                    </div>
+
+                    <form id="loginForm" class="auth-form">
+                        <div class="input-group">
+                            <label for="loginEmail">Correo Electrónico</label>
+                            <input type="email" id="loginEmail" placeholder="correo@empresa.com" required>
+                            <div class="input-focus-bg"></div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="loginPassword">Contraseña</label>
+                            <input type="password" id="loginPassword" placeholder="••••••••" required>
+                            <div class="input-focus-bg"></div>
+                        </div>
+
+                        <div class="form-actions">
+                            <label class="checkbox-container">
+                                <input type="checkbox">
+                                <span class="checkmark"></span>
+                                Recordarme
+                            </label>
+                            <a href="#" class="forgot-password" id="forgotPasswordLink">¿Olvidó su contraseña?</a>
+                        </div>
+
+                        <button type="submit" class="btn-primary">Validar Identidad</button>
+                    </form>
+
+                    <div class="form-footer">
+                        <p>¿Usuario Nuevo? <button type="button" class="btn-link" id="showRegisterBtn">Solicitar Acceso</button></p>
+                    </div>
+                </div>
+
+                <!-- Formulario de Recuperación de Contraseña -->
+                <div class="form-section hidden" id="recoverSection">
+                    <div class="form-header">
+                        <h2>Recuperar Contraseña</h2>
+                        <p>Solicite un código de seguridad por correo y verifíquelo con su palabra secreta.</p>
+                    </div>
+
+                    <form id="recoverForm" class="auth-form">
+                        <div class="input-group">
+                            <label for="recoverEmail">Correo Electrónico <span style="color: #ef4444; margin-left: 2px;">*</span></label>
+                            <input type="email" id="recoverEmail" placeholder="correo@empresa.com" required>
+                            <div class="input-focus-bg"></div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="recoverDocId">Número de Identificación (Cédula/DNI) <span style="color: #ef4444; margin-left: 2px;">*</span></label>
+                            <input type="text" id="recoverDocId" placeholder="Número identificador" required>
+                            <div class="input-focus-bg"></div>
+                        </div>
+
+                        <button type="button" id="btnRequestCode" class="btn-secondary" style="margin-bottom: 1.5rem; width: 100%; font-size: 0.9rem; padding: 0.75rem;">Solicitar Código de Seguridad por Correo ✉️</button>
+
+                        <div class="input-group hidden" id="groupRecoverCode">
+                            <label for="recoverCode">Código de Seguridad de 6 dígitos <span style="color: #ef4444; margin-left: 2px;">*</span></label>
+                            <input type="text" id="recoverCode" placeholder="Ingresa el código enviado" maxlength="6">
+                            <div class="input-focus-bg"></div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="recoverWord">Palabra Secreta de Recuperación <span style="color: #ef4444; margin-left: 2px;">*</span></label>
+                            <input type="text" id="recoverWord" placeholder="Ingresa tu palabra secreta" required>
+                            <div class="input-focus-bg"></div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="recoverNewPassword">Nueva Contraseña <span style="color: #ef4444; margin-left: 2px;">*</span></label>
+                            <input type="password" id="recoverNewPassword" placeholder="Mínimo 8 caracteres" minlength="8" required>
+                            <div class="input-focus-bg"></div>
+                        </div>
+
+                        <button type="submit" id="btnSubmitRecover" class="btn-primary" style="margin-top: 1.5rem;" disabled>Restablecer Contraseña 🛡️</button>
+                    </form>
+
+                    <div class="form-footer">
+                        <p>¿Recordó su contraseña? <button type="button" class="btn-link" id="showLoginFromRecoverBtn">Iniciar Sesión</button></p>
+                    </div>
+                </div>
+
+                <!-- Formulario de Registro con Wizard Biométrico -->
+                <div class="form-section hidden" id="registerSection">
+                    <div class="form-header" style="margin-bottom: 1.5rem;">
+                        <h2>Certificación KYC</h2>
+                        <p>Complete los pasos para blindar su identidad digital.</p>
+                    </div>
+
+                    <!-- Indicador visual de pasos Wizard -->
+                    <div class="wizard-steps-indicator">
+                        <div class="step-indicator active" id="indicator-1">1</div>
+                        <div class="step-connector" id="connector-1"></div>
+                        <div class="step-indicator" id="indicator-2">2</div>
+                        <div class="step-connector" id="connector-2"></div>
+                        <div class="step-indicator" id="indicator-3">3</div>
+                    </div>
+
+                    <form id="registerForm" class="auth-form">
+                        
+                        <!-- PASO 1: Datos Personales -->
+                        <div class="wizard-step active" id="step-1">
+                            <div class="form-grid">
+                                <div class="input-group">
+                                    <label for="regName">Nombre Completo <span style="color: #ef4444; margin-left: 2px;">*</span></label>
+                                    <input type="text" id="regName" placeholder="Juan Pérez" required>
+                                    <div class="input-focus-bg"></div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="regId">DNI / Pasaporte / Cédula <span style="color: #ef4444; margin-left: 2px;">*</span></label>
+                                    <input type="text" id="regId" placeholder="Número identificador" required>
+                                    <div class="input-focus-bg"></div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="regEmail">Correo Corporativo <span style="color: #ef4444; margin-left: 2px;">*</span></label>
+                                    <input type="email" id="regEmail" placeholder="correo@empresa.com" required>
+                                    <div class="input-focus-bg"></div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="regPhone">Teléfono / SMS 2FA <span style="color: #ef4444; margin-left: 2px;">*</span></label>
+                                    <div class="phone-input-container">
+                                        <select id="regPhonePrefix">
+                                            <option value="+57">🇨🇴 +57</option>
+                                            <option value="+34">🇪🇸 +34</option>
+                                            <option value="+52">🇲🇽 +52</option>
+                                            <option value="+1">🇺🇸 +1</option>
+                                            <option value="+54">🇦🇷 +54</option>
+                                            <option value="+56">🇨🇱 +56</option>
+                                            <option value="+51">🇵🇪 +51</option>
+                                            <option value="+593">🇪🇨 +593</option>
+                                            <option value="+58">🇻🇪 +58</option>
+                                            <option value="+507">🇵🇦 +507</option>
+                                        </select>
+                                        <input type="tel" id="regPhone" placeholder="300 000 0000" required>
+                                    </div>
+                                    <div class="input-focus-bg"></div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="regCompany">Cargo / Entidad Legal <span style="color: #ef4444; margin-left: 2px;">*</span></label>
+                                    <input type="text" id="regCompany" placeholder="Ej: Director Jurídico, Representante Legal..." required>
+                                    <div class="input-focus-bg"></div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="regCountry">País <span style="color: #ef4444; margin-left: 2px;">*</span></label>
+                                    <select id="regCountry" required>
+                                        <option value="" disabled selected>Seleccione su país</option>
+                                        <option value="Colombia">🇨🇴 Colombia</option>
+                                        <option value="España">🇪🇸 España</option>
+                                        <option value="México">🇲🇽 México</option>
+                                        <option value="Estados Unidos">🇺🇸 Estados Unidos</option>
+                                        <option value="Argentina">🇦🇷 Argentina</option>
+                                        <option value="Chile">🇨🇱 Chile</option>
+                                        <option value="Perú">🇵🇪 Perú</option>
+                                        <option value="Ecuador">🇪🇨 Ecuador</option>
+                                        <option value="Venezuela">🇻🇪 Venezuela</option>
+                                        <option value="Panamá">🇵🇦 Panamá</option>
+                                    </select>
+                                    <div class="input-focus-bg"></div>
+                                </div>
+
+                                <div class="input-group full-width">
+                                    <label for="regPassword">Contraseña de Seguridad <span style="color: #ef4444; margin-left: 2px;">*</span></label>
+                                    <input type="password" id="regPassword" placeholder="Mínimo 8 caracteres" minlength="8" required>
+                                    <div class="input-focus-bg"></div>
+                                </div>
+
+                                <div class="input-group full-width" style="margin-top: 1rem;">
+                                    <label for="regRecoveryWord">Palabra Secreta de Recuperación <span style="color: #ef4444; margin-left: 2px;">*</span></label>
+                                    <input type="text" id="regRecoveryWord" placeholder="Ej: helius, cumplimiento, etc. (Úsala para recuperar tu clave)" required>
+                                    <div class="input-focus-bg"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="wizard-actions" style="margin-top: 2rem;">
+                                <button type="button" class="btn-primary" id="nextToStep2Btn" style="width: 100%;">Siguiente: Subir Identificación ➔</button>
+                            </div>
+                        </div>
+
+                        <!-- PASO 2: Carga de Documento de Identidad Oficial -->
+                        <div class="wizard-step" id="step-2">
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.5;">
+                                Por favor cargue o fotografíe una **imagen nítida y bien iluminada** de su DNI, Pasaporte o Cédula (en formato PNG, JPG o JPEG). El sistema de IA escaneará su rostro del documento para la verificación cruzada biométrica.
+                            </p>
+
+                            <!-- Selector de Método: Cargar Archivo o Tomar Foto -->
+                            <div class="kyc-method-selector" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; justify-content: center;">
+                                <button type="button" class="btn-secondary active" id="btnMethodUpload" style="flex: 1; padding: 0.75rem; font-size: 0.85rem;">📁 Subir Archivo</button>
+                                <button type="button" class="btn-secondary" id="btnMethodCamera" style="flex: 1; padding: 0.75rem; font-size: 0.85rem;">📷 Tomar Foto</button>
+                            </div>
+                            
+                            <div class="input-group full-width" id="kycUploadGroup">
+                                <label>Documento Oficial con Fotografía</label>
+                                <div class="file-drop-area glass-card" id="kycDropArea" style="padding: 3rem 2rem;">
+                                    <span class="drop-icon" style="font-size: 3rem;">🆔</span>
+                                    <span class="drop-text" id="kycDropText" style="margin-top: 10px;">Arrastre o seleccione la imagen de su identificación</span>
+                                    <input type="file" id="regKycFile" accept="image/png, image/jpeg, image/jpg" hidden>
+                                </div>
+                            </div>
+
+                            <!-- Área de Captura por Cámara -->
+                            <div id="kycCameraArea" class="glass-card" style="display: none; padding: 1.5rem; text-align: center; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--border-radius-md); background: rgba(0, 0, 0, 0.2); flex-direction: column; align-items: center; justify-content: center; width: 100%;">
+                                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">Alinee su documento dentro del recuadro y presione el botón de captura.</p>
+                                <div class="webcam-wrapper scanning" id="kycWebcamWrapper" style="margin: 0 auto; width: 100%; max-width: 380px; height: 280px; position: relative;">
+                                    <video id="kycWebcam" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                                    <canvas id="kycCanvas" style="display: none;"></canvas>
+                                    <div class="doc-rectangle-guide"></div>
+                                    <div class="biometry-laser-scanner" style="display: block; animation: laserScan 2.2s infinite ease-in-out;"></div>
+                                </div>
+                                <div class="kyc-camera-controls" style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: center; width: 100%;">
+                                    <button type="button" class="btn-primary" id="btnStartKycCamera" style="background: var(--gradient-brand); min-width: 150px; font-size: 0.85rem; margin: 0;">
+                                        🔌 Encender Cámara
+                                    </button>
+                                    <button type="button" class="btn-primary" id="btnCaptureKycPhoto" style="background: #10b981; border: none; min-width: 150px; display: none; font-size: 0.85rem; margin: 0;">
+                                        📸 Capturar Foto DNI
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Card de Simulación de Lectura OCR -->
+                            <div id="ocrResultCard" class="glass-card" style="display: none; margin-top: 1.5rem; padding: 1.5rem; border: 1px solid rgba(59, 130, 246, 0.2); background: rgba(255, 255, 255, 0.02); width: 100%; border-radius: var(--border-radius-md);">
+                                <h4 style="color: var(--primary); display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; margin-bottom: 0.75rem; font-weight: 600;">
+                                    <span>🔍</span> LECTURA INTELIGENTE OCR (SIMULACIÓN DE IA)
+                                </h4>
+                                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.4;">
+                                    Hemos escaneado el documento cargado. Para simular suplantación de identidad o errores, puedes modificar los valores detectados por el OCR antes de proceder:
+                                </p>
+                                <div class="form-grid" style="gap: 1rem; grid-template-columns: 1fr;">
+                                    <div class="input-group">
+                                        <label style="font-size: 0.78rem;">Nombre Completo Detectado</label>
+                                        <input type="text" id="ocrSimName" placeholder="Cargando..." style="padding: 0.65rem 0.85rem; font-size: 0.88rem;">
+                                    </div>
+                                    <div class="input-group">
+                                        <label style="font-size: 0.78rem;">Número ID Detectado</label>
+                                        <input type="text" id="ocrSimId" placeholder="Cargando..." style="padding: 0.65rem 0.85rem; font-size: 0.88rem;">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="wizard-actions" style="margin-top: 2.5rem;">
+                                <button type="button" class="btn-secondary" id="backToStep1Btn">⬅ Atrás</button>
+                                <button type="button" class="btn-primary" id="nextToStep3Btn">Siguiente: Foto Biométrica ➔</button>
+                            </div>
+                        </div>
+
+                        <!-- PASO 3: Validación Biométrica Facial (Selfie) -->
+                        <div class="wizard-step" id="step-3">
+                            <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 1rem; line-height: 1.5; text-align: center;">
+                                Coloque su rostro centrado en la guía de abajo. El motor de IA comparará su DNI con su selfie en tiempo real.
+                            </p>
+                            
+                            <!-- Visor de la Cámara Web con Efectos Cripto-Neón -->
+                            <div class="webcam-wrapper" id="webcamWrapper">
+                                <video id="webcam" autoplay playsinline></video>
+                                <canvas id="selfieCanvas" style="display: none;"></canvas>
+                                <!-- Guía Ovalada de Enfoque -->
+                                <div class="face-oval-guide"></div>
+                                <!-- Barra de Escáner Láser Animada -->
+                                <div class="biometry-laser-scanner"></div>
+                            </div>
+                            
+                            <!-- Caja de Estado Dinámico de la IA -->
+                            <div class="biometry-status-box" id="biometryStatusBox">
+                                <div class="biometry-status-loader hidden" id="biometryLoader"></div>
+                                <span class="biometry-status-text" id="biometryStatusText">Cámara inactiva. Esperando verificación...</span>
+                                <span class="biometry-matched-score" id="biometryScoreText">0.00%</span>
+                            </div>
+
+                            <button type="button" class="btn-primary" id="btnStartBiometry" style="width: 100%; margin: 1rem 0; background: var(--gradient-brand); font-size: 0.95rem;">
+                                📷 Iniciar Captura y Escaneo Facial
+                            </button>
+
+                            <div class="form-actions terms-group" style="margin-top: 1rem;">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="regTermsCheck" required>
+                                    <span class="checkmark"></span>
+                                    Acepto el escaneo facial para <a href="#">Verificación Cero-Conocimiento</a>.
+                                </label>
+                            </div>
+                            
+                            <div class="wizard-actions" style="margin-top: 2rem;">
+                                <button type="button" class="btn-secondary" id="backToStep2Btn">⬅ Atrás</button>
+                                <button type="submit" class="btn-primary" id="regSubmitBtn" style="background: #10b981; border: none; box-shadow: 0 4px 15px rgba(16,185,129,0.3);" disabled>
+                                    Firmar Registro Seguro 🛡️
+                                </button>
+                            </div>
+                        </div>
+                        
+                    </form>
+
+                    <div class="form-footer">
+                        <p>¿Identidad ya certificada? <button type="button" class="btn-link" id="showLoginBtn">Iniciar Sesión</button></p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div id="toast-container"></div>
+
+    <script src="app.js"></script>
+    <script src="biometry.js"></script>
+</body>
+</html>
