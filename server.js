@@ -1164,97 +1164,190 @@ app.get('/api/admin/logs', authenticateToken, requireAdmin, (req, res) => {
     });
 });
 
-// Endpoint del Secretario de IA (RAG con la Bóveda del Usuario)
-app.post('/api/ai-chat', authenticateToken, async (req, res) => {
+// Endpoint del Secretario de IA (RAG con la Bóveda del Usuario y Auditoría Global Admin)
+const handleAiChat = async (req, res) => {
     const { message } = req.body;
     if (!message) return res.status(400).json({ error: 'Mensaje requerido.' });
 
-    // 1. Obtener la lista de activos del usuario logueado en la base de datos sqlite
-    db.all(
-        `SELECT fileName, assetType, fileHash, filePath, createdAt FROM assets WHERE userId = ?`,
-        [req.user.id],
-        async (err, assets) => {
-            if (err) return res.status(500).json({ error: 'Error al consultar la bóveda del usuario.' });
+    const isAdmin = req.user && req.user.role === 'admin';
 
-            // 2. Construir el contexto sobre Ordenis y la lista de sus activos blindados
-            const userAssetsText = assets.map(a => {
-                let sizeText = 'Desconocido';
-                try {
-                    const fullPath = path.join(__dirname, a.filePath);
-                    if (fs.existsSync(fullPath)) {
-                        sizeText = fs.statSync(fullPath).size + ' bytes';
+    if (isAdmin) {
+        // Modo Administrador Global: Consultar todos los activos y todos los usuarios
+        db.all(
+            `SELECT a.fileName, a.assetType, a.fileHash, a.filePath, a.createdAt, u.name as ownerName, u.email as ownerEmail, u.company as ownerCompany, u.kycStatus
+             FROM assets a
+             LEFT JOIN users u ON a.userId = u.id
+             ORDER BY a.createdAt DESC`,
+            [],
+            (err, assets) => {
+                if (err) assets = [];
+
+                db.all(
+                    `SELECT id, name, docId, email, company, kycStatus, createdAt FROM users ORDER BY createdAt DESC`,
+                    [],
+                    async (errUsers, usersList) => {
+                        if (errUsers) usersList = [];
+
+                        const globalAssetsText = assets.map(a => {
+                            let sizeText = 'Desconocido';
+                            try {
+                                const fullPath = path.join(__dirname, a.filePath);
+                                if (fs.existsSync(fullPath)) {
+                                    sizeText = fs.statSync(fullPath).size + ' bytes';
+                                }
+                            } catch (e) {}
+                            return `- Archivo: "${a.fileName}", Clasificación: "${a.assetType}", Propietario: "${a.ownerName || 'Admin'}" (${a.ownerEmail || 'admin@ordenis.com'}), Hash: "${a.fileHash}", Tamaño: ${sizeText}, Fecha: ${a.createdAt}`;
+                        }).join('\n');
+
+                        const globalUsersText = usersList.map(u => {
+                            return `- Usuario: "${u.name}", Email: "${u.email}", Empresa: "${u.company || 'Independiente'}", KYC: "${u.kycStatus || 'Pendiente'}", Registrado: ${u.createdAt}`;
+                        }).join('\n');
+
+                        const systemPrompt = `Eres el "Secretario Inteligente y Auditor Global" de ORDENIS para el Administrador.
+Tienes acceso total a la infraestructura para responder preguntas de auditoría, conteo de documentos, estado de KYC de los usuarios y búsqueda de activos en toda la red.
+
+DATOS GLOBALES DE LA RED DE ORDENIS:
+- Total Usuarios Registrados: ${usersList.length}
+- Total Activos Cifrados: ${assets.length}
+
+USUARIOS EN LA RED:
+${usersList.length > 0 ? globalUsersText : 'No hay usuarios normales registrados.'}
+
+ACTIVOS Y DOCUMENTOS EN LA RED:
+${assets.length > 0 ? globalAssetsText : 'No hay activos blindados cargados en el sistema.'}
+
+Responde siempre de forma profesional, clara, estructurada en Markdown en español.
+Mensaje del administrador: "${message}"`;
+
+                        const apiKey = process.env.GEMINI_API_KEY;
+                        if (!apiKey) {
+                            return res.json({ response: getLocalResponse(message, assets, true, usersList) });
+                        }
+
+                        try {
+                            const response = await fetch(
+                                `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+                                {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ contents: [{ parts: [{ text: systemPrompt }] }] })
+                                }
+                            );
+                            const data = await response.json();
+                            if (response.ok && data.candidates && data.candidates[0].content.parts[0].text) {
+                                res.json({ response: data.candidates[0].content.parts[0].text });
+                            } else {
+                                res.json({ response: getLocalResponse(message, assets, true, usersList) });
+                            }
+                        } catch (e) {
+                            res.json({ response: getLocalResponse(message, assets, true, usersList) });
+                        }
                     }
-                } catch (e) {}
-                return `- Archivo: "${a.fileName}", Clasificación: "${a.assetType}", Hash SHA-256: "${a.fileHash}", Tamaño: ${sizeText}, Blindado el: ${a.createdAt}`;
-            }).join('\n');
+                );
+            }
+        );
+    } else {
+        // Modo Usuario Normal: Consultar únicamente los activos propios del usuario logueado
+        db.all(
+            `SELECT fileName, assetType, fileHash, filePath, createdAt FROM assets WHERE userId = ?`,
+            [req.user.id],
+            async (err, assets) => {
+                if (err) return res.status(500).json({ error: 'Error al consultar la bóveda del usuario.' });
 
-            const systemPrompt = `Eres el "Secretario Inteligente" de la plataforma ORDENIS (también conocida como Ordenix).
+                const userAssetsText = assets.map(a => {
+                    let sizeText = 'Desconocido';
+                    try {
+                        const fullPath = path.join(__dirname, a.filePath);
+                        if (fs.existsSync(fullPath)) {
+                            sizeText = fs.statSync(fullPath).size + ' bytes';
+                        }
+                    } catch (e) {}
+                    return `- Archivo: "${a.fileName}", Clasificación: "${a.assetType}", Hash SHA-256: "${a.fileHash}", Tamaño: ${sizeText}, Blindado el: ${a.createdAt}`;
+                }).join('\n');
+
+                const systemPrompt = `Eres el "Secretario Inteligente" de la plataforma ORDENIS.
 Tu objetivo es ayudar al usuario con cualquier duda sobre la plataforma, explicar cómo funciona o responder sobre los archivos y casos que tiene guardados en su bóveda.
 
-INFORMACIÓN DE LA PLATAFORMA ORDENIS:
-- ¿Qué es? Plataforma B2B SaaS de automatización financiera y custodia segura de activos legales y propiedad intelectual.
-- Fundador: Desarrollada bajo la dirección estratégica de Jefferson Montoya. Es Project Manager Tecnológico, Legal Strategist y Abogado con más de 12 años de experiencia en la intersección de cumplimiento legal (Compliance) y arquitectura de software. Experto en automatización con Python y n8n, y actual CBO de Heliustin. (Contacto: +57 3105376773, LinkedIn: https://www.linkedin.com/in/jejomoan/).
-- Seguridad: Cifrado de extremo a extremo mediante el algoritmo de grado militar AES-256-CBC. Los archivos se guardan de forma inmutable con su sello de integridad SHA-256.
-- Cumplimiento: Cumple con normativas eIDAS (Reglamento de la UE sobre identificación electrónica y servicios de confianza) e ISO 27001 para garantizar la validez probatoria de los documentos.
-- Funciones: Panel personal, Mis Activos (explorador con Drag & Drop), Certificados de Blindaje Criptográfico (para descargar o imprimir con código QR dinámico), y esta sección de Secretario de IA.
-
-BÓVEDA ACTUAL DEL USUARIO (Datos reales del usuario):
+BÓVEDA ACTUAL DEL USUARIO:
 ${assets.length > 0 ? userAssetsText : 'Actualmente la bóveda del usuario está vacía.'}
-
-INSTRUCCIONES DE RESPUESTA:
-- Sé educado, profesional y transmite seguridad y confidencialidad.
-- Responde siempre en español.
-- Si el usuario te pregunta por un archivo o un caso específico (por ejemplo: "Mire, tengo el caso de Pedro Pérez, ¿tienes algo parecido?"), busca en la lista de arriba si hay coincidencias semánticas o de nombre, y descríbelo detalladamente (nombre, hash, fecha de subida, etc.). Si no hay, explícale que no se encuentra en la bóveda, pero que puede blindarlo ahora mismo.
-- Si el usuario pregunta cosas generales sobre Ordenis (cómo se creó, para qué sirve, qué tecnologías usa), explícale claramente.
-- Mantén la conversación enfocada en el soporte, la seguridad y la consulta de activos.
 
 Mensaje del usuario: "${message}"`;
 
-            const apiKey = process.env.GEMINI_API_KEY;
-
-            if (!apiKey) {
-                // Modo local robusto si no hay API key configurada en .env
-                return res.json({ 
-                    response: getLocalResponse(message, assets)
-                });
-            }
-
-            try {
-                const response = await fetch(
-                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: systemPrompt }] }]
-                        })
-                    }
-                );
-                
-                const data = await response.json();
-                if (response.ok && data.candidates && data.candidates[0].content.parts[0].text) {
-                    res.json({ response: data.candidates[0].content.parts[0].text });
-                } else {
-                    console.error('Error de respuesta de Gemini API:', data);
-                    res.json({ response: getLocalResponse(message, assets) });
+                const apiKey = process.env.GEMINI_API_KEY;
+                if (!apiKey) {
+                    return res.json({ response: getLocalResponse(message, assets, false, []) });
                 }
-            } catch (e) {
-                console.error('Error al llamar a la API de Gemini:', e);
-                res.json({ response: getLocalResponse(message, assets) });
+
+                try {
+                    const response = await fetch(
+                        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+                        {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ contents: [{ parts: [{ text: systemPrompt }] }] })
+                        }
+                    );
+                    const data = await response.json();
+                    if (response.ok && data.candidates && data.candidates[0].content.parts[0].text) {
+                        res.json({ response: data.candidates[0].content.parts[0].text });
+                    } else {
+                        res.json({ response: getLocalResponse(message, assets, false, []) });
+                    }
+                } catch (e) {
+                    res.json({ response: getLocalResponse(message, assets, false, []) });
+                }
             }
-        }
-    );
-});
+        );
+    }
+};
+
+app.post('/api/ai-chat', authenticateToken, handleAiChat);
+app.post('/api/chat/query', authenticateToken, handleAiChat);
+app.post('/api/chat', authenticateToken, handleAiChat);
 
 // Función de respuesta local para contingencia si no hay API Key de Gemini
-function getLocalResponse(message, assets) {
+function getLocalResponse(message, assets, isAdmin = false, usersList = []) {
     const q = message.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     
+    // 0. Modo Admin: Consultas globales de usuarios y auditoría
+    if (isAdmin) {
+        if (q.includes('usuario') || q.includes('usuarios') || q.includes('cuentas') || q.includes('clientes')) {
+            if (usersList.length === 0) {
+                return `📊 **Auditoría Global de Usuarios:**\nActualmente no hay cuentas de usuarios registradas en el sistema.`;
+            }
+            let text = `👥 **Auditoría Global de Usuarios Registrados (${usersList.length}):**\n\n`;
+            usersList.forEach((u, i) => {
+                text += `${i + 1}. **${u.name}** (${u.email})\n`;
+                text += `   • Empresa: \`${u.company || 'Independiente'}\` | Doc ID: \`${u.docId}\`\n`;
+                text += `   • Estado KYC: **${u.kycStatus || 'Pendiente'}** | Registrado: *${new Date(u.createdAt).toLocaleDateString()}*\n\n`;
+            });
+            return text;
+        }
+
+        if (q.includes('auditoria') || q.includes('reporte') || q.includes('resumen global') || q.includes('estadisticas')) {
+            let text = `📊 **Reporte de Auditoría Global de la Red ORDENIS**\n\n`;
+            text += `- 👤 **Total Usuarios Registrados:** ${usersList.length}\n`;
+            text += `- 🛡️ **Total Documentos Blindados:** ${assets.length}\n`;
+            
+            const kycApproved = usersList.filter(u => u.kycStatus === 'Aprobado').length;
+            const kycPending = usersList.filter(u => !u.kycStatus || u.kycStatus === 'Pendiente').length;
+            text += `- 📄 **Estados KYC:** ${kycApproved} Aprobados / ${kycPending} Pendientes\n\n`;
+
+            if (assets.length > 0) {
+                text += `📂 **Últimos Documentos Registrados:**\n`;
+                assets.slice(0, 5).forEach((a, i) => {
+                    text += `${i + 1}. 📄 **${a.fileName}** (${a.assetType || 'Documento'}) - Subido por: *${a.ownerName || 'Admin'}*\n`;
+                });
+            }
+            return text;
+        }
+    }
+
     // 1. Preguntas sobre el creador / Jefferson Montoya
     if (q.includes('jefferson') || q.includes('montoya')) {
         return `🛡️ **Jefferson Montoya Anaya** es el Fundador y Director Estratégico de ORDENIS (también conocido como Ordenix).
 Es un Abogado y Project Manager Tecnológico con más de 12 años de experiencia, especializado en la intersección de cumplimiento legal (Compliance), automatización de procesos (mediante Python y n8n) y arquitectura de software.
-Actualmente es Chief Business Officer (CBO) en Heliustin y cuenta con formación ejecutiva en MIT, Stanford e IBM.
+Currently Chief Business Officer (CBO) en Heliustin y cuenta con formación ejecutiva en MIT, Stanford e IBM.
 
 Si desea ponerse en contacto con él, puede escribirle directamente a su teléfono **+57 3105376773** o visitar su perfil profesional en [LinkedIn](https://www.linkedin.com/in/jejomoan/).`;
     }
@@ -1262,58 +1355,48 @@ Si desea ponerse en contacto con él, puede escribirle directamente a su teléfo
     // 2. Preguntas sobre inmutabilidad / seguridad (Priorizado)
     if (q.includes('inmutable') || q.includes('seguro') || q.includes('eidas') || q.includes('cifrado') || q.includes('cripto') || q.includes('aes')) {
         return `🛡️ **Seguridad Inmutable de ORDENIS:**
-- **Cifrado AES-256-CBC**: Todos sus archivos se guardan cifrados con algoritmos de grado militar. Solo el dueño de la cuenta puede descifrarlos al descargarlos.
-- **Sellado SHA-256**: Al subir un archivo, se calcula su huella digital criptográfica (Hash). Este hash se almacena en nuestra base de datos inmutable. Si alguien altera un solo byte del archivo, la huella cambia revelando la manipulación.
+- **Cifrado AES-256-CBC**: Todos los archivos se guardan cifrados con algoritmos de grado militar. Solo el dueño de la cuenta puede descifrarlos al descargarlos.
+- **Sellado SHA-256**: Al subir un archivo, se calcula su huella digital criptográfica (Hash). Este hash se almacena en nuestra base de datos inmutable.
 - **Cumplimiento Legal**: Los certificados generados cumplen con el estándar **eIDAS** europeo y la certificación **ISO 27001**, dándole validez probatoria ante auditorías y entidades legales.`;
     }
 
     // 3. Preguntas sobre blindaje / subir
     if (q.includes('como blindo') || q.includes('como subir') || q.includes('blindar') || q.includes('proteger')) {
-        return `Para blindar un nuevo activo en su bóveda, siga estos pasos:
+        return `Para blindar un nuevo activo en la bóveda, siga estos pasos:
 1. Vaya a la pestaña **Mis Activos** o al **Panel Personal**.
 2. Seleccione el tipo de archivo (Documento Legal, Código Fuente, o Diseño/Imagen).
 3. Arrastre el archivo a la zona segura o haga clic en "Seleccionar Archivo".
 4. Presione **Encriptar y Guardar**. El sistema generará su firma inmutable SHA-256 y cifrará el archivo instantáneamente con grado militar AES-256.`;
     }
 
-    // 4. Solicitud de consejos o soluciones generales
-    if (q.includes('consejo') || q.includes('solucion') || q.includes('soluciones') || q.includes('aconseja') || q.includes('ayuda')) {
-        return `💡 **Consejos y soluciones del Secretario de Bóveda:**
-1. **Organice sus activos:** Use la clasificación adecuada (Documento Legal, Código Fuente o Arte) para facilitar auditorías futures.
-2. **Use los Certificados:** Cada archivo blindado genera un certificado legal imprimible con código QR. Úselo para probar la autenticidad de sus documentos ante socios comerciales.
-3. **Monitoree las alertas:** El panel de administración registra cualquier intento de alteración o subida duplicada para su seguridad.`;
-    }
-
-    // 5. Preguntas sobre qué hay en la bóveda o listar activos
+    // 4. Preguntas sobre qué hay en la bóveda o listar activos
     const listSynonyms = [
         'que tengo', 'ue tengo', 'q tengo', 'u tengo', 
         'que hay', 'listar', 'ver mi', 'resumen', 
         'mis activos', 'mis archivos', 'mostrar', 
-        'boveda', 'bobeda', 'que tengo blindado'
+        'boveda', 'bobeda', 'que tengo blindado', 'documentos'
     ];
-    const wantsList = listSynonyms.some(syn => q.includes(syn)) || q.includes('que haces') || q.includes('que hace');
+    const wantsList = listSynonyms.some(syn => q.includes(syn));
     
     if (wantsList) {
         if (assets.length === 0) {
-            return `Su bóveda en ORDENIS se encuentra actualmente **vacía**.
-Para empezar a proteger su propiedad intelectual y activos legales, puede subirlos utilizando la zona de arrastre (Drag & Drop) o seleccionando un archivo desde la pestaña **Mis Activos**.
-Una vez subidos, se cifrarán automáticamente con **AES-256-CBC** y podré ayudarle a buscar coincidencias e integridades.`;
+            return `La bóveda se encuentra actualmente **vacía**.
+Para empezar a proteger propiedad intelectual y activos legales, puede subirlos utilizando la zona de arrastre (Drag & Drop) o seleccionando un archivo desde la pestaña **Mis Activos**.`;
         }
         
-        let text = `📂 **Resumen de su Bóveda Digital (Modo Local)**\n`;
-        text += `Actualmente tiene **${assets.length}** activo(s) blindado(s) y protegido(s) con cifrado militar:\n\n`;
+        let text = `📂 **Resumen de Documentos Cargados en la Red**\n`;
+        text += `Actualmente hay **${assets.length}** activo(s) blindado(s) y protegido(s):\n\n`;
         assets.forEach((item, idx) => {
             text += `${idx + 1}. 📄 **${item.fileName}**\n`;
-            text += `   • Tipo: \`${item.assetType || 'Documento'}\`\n`;
+            text += `   • Clasificación: \`${item.assetType || 'Documento'}\`\n`;
+            if (isAdmin && item.ownerName) text += `   • Propietario: *${item.ownerName}* (${item.ownerEmail})\n`;
             text += `   • Registrado: *${new Date(item.createdAt).toLocaleString()}*\n`;
             text += `   • Integridad SHA-256: \`${item.fileHash.substring(0, 24)}...\`\n\n`;
         });
-        text += `💡 *Consejo de Seguridad:* Puede descargar cualquiera de estos activos o ver su Certificado de Blindaje con código QR oficial para validación de terceros.`;
         return text;
     }
 
-    // 6. Buscar coincidencia dinámica en la Bóveda en base a tokens de búsqueda
-    // Eliminar palabras vacías (stopwords) comunes para buscar palabras clave reales
+    // 5. Buscar coincidencia dinámica en la Bóveda en base a tokens de búsqueda
     const stopWords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'de', 'del', 'al', 'y', 'o', 'en', 'para', 'con', 'por', 'que', 'encontrado', 'busca', 'buscar', 'coincidencia', 'caso', 'sobre', 'tengo']);
     const tokens = q.split(/[^a-zA-Z0-9íáéóúñíÁÉÓÚÑ]+/).filter(t => t.length > 2 && !stopWords.has(t));
     
@@ -1321,30 +1404,29 @@ Una vez subidos, se cifrarán automáticamente con **AES-256-CBC** y podré ayud
         const matches = assets.filter(a => {
             const nameNorm = a.fileName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             const typeNorm = (a.assetType || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            return tokens.some(token => nameNorm.includes(token) || typeNorm.includes(token));
+            const ownerNorm = (a.ownerName || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            return tokens.some(token => nameNorm.includes(token) || typeNorm.includes(token) || ownerNorm.includes(token));
         });
         
         if (matches.length > 0) {
             let text = `🔍 **Resultados de Búsqueda para su consulta**\n`;
-            text += `He escaneado su Bóveda y encontré **${matches.length}** activo(s) relacionado(s):\n\n`;
+            text += `Se encontraron **${matches.length}** activo(s) relacionado(s):\n\n`;
             
             matches.forEach(item => {
                 text += `🛡️ **${item.fileName}**\n`;
                 text += `   • Clasificación: ${item.assetType || 'Documento'}\n`;
+                if (isAdmin && item.ownerName) text += `   • Propietario: *${item.ownerName}*\n`;
                 text += `   • Fecha de Blindaje: ${new Date(item.createdAt).toLocaleString()}\n`;
                 text += `   • Hash SHA-256: \`${item.fileHash}\`\n\n`;
             });
-            
-            text += `💡 **Recomendación y Solución:**\n`;
-            text += `Estos documentos están sellados criptográficamente. Si está gestionando un caso o contrato similar, le aconsejo descargar los certificados oficiales para verificar su firma temporal. Si necesita asociar más documentación legal a este mismo caso, puede blindar nuevos archivos y les aplicaremos la misma firma inmutable.`;
             return text;
         }
     }
 
-    // 7. Respuesta por defecto
-    return `Hola, soy su **Secretario Inteligente** de ORDENIS.
-Puedo analizar y buscar en su Bóveda, darle detalles de sus archivos blindados, buscar coincidencias en base a cualquier palabra o explicarle nuestro cifrado AES-256.
-*Intente preguntarme:* "que tengo en mi boveda", "busca el caso de Pedro Perez", o pregunte sobre "Jefferson Montoya". ¿Qué desea consultar?`;
+    // 6. Respuesta por defecto
+    return `Hola, soy el **Asistente Inteligente de Documentos** de ORDENIS.
+Puedo analizar y buscar en los documentos cargados, brindarle detalles de los archivos blindados, consultar usuarios registrados o generar reportes de auditoría.
+*Intente preguntarme:* "¿Qué documentos hay cargados?", "Lista los usuarios", "Auditoría de activos", o busque el nombre de cualquier archivo o persona.`;
 }
 
 app.listen(PORT, () => {

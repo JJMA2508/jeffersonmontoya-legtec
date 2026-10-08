@@ -1,0 +1,1616 @@
+/* Base Styles & Variables */
+:root {
+    --bg-main: #0a0a0b;
+    --bg-surface: #121214;
+    --bg-surface-hover: #1c1c1f;
+    --text-primary: #ffffff;
+    --text-secondary: #a1a1aa;
+    --border-color: rgba(255, 255, 255, 0.1);
+
+    --primary: #3B82F6;
+    --primary-hover: #2563EB;
+    --gradient-brand: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+    --gradient-glow: linear-gradient(135deg, rgba(59, 130, 246, 0.4) 0%, rgba(139, 92, 246, 0.4) 100%);
+
+    --border-radius-sm: 6px;
+    --border-radius-md: 12px;
+    --border-radius-lg: 24px;
+
+    --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    /* Prevent body scroll, auth container has its own */
+}
+
+/* Auth Layout */
+.auth-container {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    max-width: 1600px;
+    background-color: var(--bg-main);
+}
+
+/* Left Banner Panel */
+.auth-banner {
+    flex: 1;
+    position: relative;
+    padding: 4rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    border-right: 1px solid var(--border-color);
+}
+
+.auth-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at bottom right, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+    z-index: 1;
+}
+
+.banner-content {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 500px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 4rem;
+}
+
+.logo span {
+    font-weight: 700;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+}
+
+.banner-content h1 {
+    font-size: 3.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.banner-content p {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 3rem;
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--border-radius-md);
+    padding: 1.5rem;
+    display: inline-flex;
+    margin-top: auto;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.glow-sphere {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 600px;
+    background: var(--gradient-glow);
+    filter: blur(120px);
+    border-radius: 50%;
+    opacity: 0.5;
+    z-index: 0;
+    pointer-events: none;
+    animation: drift 20s infinite alternate ease-in-out;
+}
+
+@keyframes drift {
+    0% {
+        transform: translate(-60%, -40%) scale(1);
+    }
+
+    100% {
+        transform: translate(-40%, -60%) scale(1.1);
+    }
+}
+
+/* Right Forms Panel */
+.auth-forms-wrapper {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    overflow-y: auto;
+    background-color: var(--bg-main);
+}
+
+.auth-forms {
+    width: 100%;
+    max-width: 440px;
+    position: relative;
+}
+
+.form-section {
+    width: 100%;
+    transition: opacity var(--transition-smooth), transform var(--transition-smooth);
+}
+
+.form-section.hidden {
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(20px);
+}
+
+.form-header {
+    margin-bottom: 2rem;
+}
+
+.form-header h2 {
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.form-header p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+/* Forms & Inputs */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+}
+
+.input-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    position: relative;
+}
+
+.input-group label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: color var(--transition-fast);
+}
+
+.input-group input, .input-group select {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: 0.875rem 1rem;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-family: inherit;
+    transition: border-color var(--transition-fast), background-color var(--transition-fast);
+    outline: none;
+    position: relative;
+    z-index: 2;
+}
+
+.input-group input::placeholder {
+    color: rgba(255, 255, 255, 0.2);
+}
+
+.input-group input:hover, .input-group select:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    background-color: var(--bg-surface-hover);
+}
+
+.input-group input:focus, .input-group select:focus {
+    border-color: var(--primary);
+    background-color: var(--bg-surface);
+}
+
+.input-group input:focus+.input-focus-bg::before, .input-group select:focus+.input-focus-bg::before, .phone-input-container:focus-within+.input-focus-bg::before {
+    opacity: 1;
+}
+
+.phone-input-container {
+    display: flex;
+    gap: 0.75rem;
+    width: 100%;
+    position: relative;
+    z-index: 2;
+}
+
+.phone-input-container select {
+    width: 130px !important;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 18px;
+    padding-right: 28px !important;
+}
+
+.phone-input-container input {
+    flex: 1;
+}
+
+.input-focus-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    pointer-events: none;
+    border-radius: var(--border-radius-md);
+    padding: 2px;
+}
+
+.input-focus-bg::before {
+    content: "";
+    position: absolute;
+    top: 24px;
+    bottom: -2px;
+    left: -2px;
+    right: -2px;
+    background: var(--gradient-brand);
+    border-radius: calc(var(--border-radius-md) + 1px);
+    z-index: -1;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+/* Buttons and Links */
+.btn-primary {
+    background: var(--gradient-brand);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-md);
+    padding: 0.875rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    position: relative;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+}
+
+.btn-primary:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-weight: 500;
+    font-size: inherit;
+    font-family: inherit;
+    cursor: pointer;
+    transition: color var(--transition-fast);
+}
+
+.btn-link:hover {
+    color: var(--primary-hover);
+    text-decoration: underline;
+}
+
+/* Utilities (Checkbox / Links) */
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+}
+
+.terms-group {
+    margin-top: 0.5rem;
+}
+
+.forgot-password {
+    color: var(--primary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+.forgot-password:hover {
+    color: var(--primary-hover);
+    text-decoration: underline;
+}
+
+.form-footer {
+    margin-top: 2rem;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.form-footer a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+/* Custom Checkbox */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding-left: 28px;
+    cursor: pointer;
+    user-select: none;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.checkbox-container a {
+    color: var(--text-primary);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    transition: border-color var(--transition-fast);
+}
+
+.checkbox-container a:hover {
+    border-color: var(--text-primary);
+}
+
+.checkbox-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkmark {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    height: 18px;
+    width: 18px;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    transition: all var(--transition-fast);
+}
+
+.checkbox-container:hover input~.checkmark {
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.checkbox-container input:checked~.checkmark {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 5px;
+    top: 2px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.checkbox-container input:checked~.checkmark:after {
+    display: block;
+}
+
+/* Responsive Design */
+@media (max-width: 968px) {
+    .auth-banner {
+        display: none;
+        /* Hide illustrative part on smaller screens */
+    }
+
+    .auth-forms-wrapper {
+        padding: 4rem 2rem;
+    }
+
+    .auth-forms {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+        /* Stack registration inputs on mobile */
+    }
+
+    .form-header h2 {
+        font-size: 1.75rem;
+    }
+}
+
+/* KYC Upload Area */
+.file-drop-area {
+    width: 100%;
+    padding: 2rem;
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    border-radius: var(--border-radius-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-align: center;
+}
+
+.file-drop-area.drag-over {
+    border-color: var(--primary);
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+.file-drop-area.scanning-mode {
+    border-color: var(--primary);
+    background-color: rgba(59, 130, 246, 0.05);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+    animation: pulseBorder 1.5s infinite ease-in-out;
+}
+
+@keyframes pulseBorder {
+    0% { border-color: rgba(59, 130, 246, 0.2); }
+    50% { border-color: rgba(59, 130, 246, 0.8); }
+    100% { border-color: rgba(59, 130, 246, 0.2); }
+}
+
+.file-drop-area .drop-icon {
+    font-size: 2rem;
+    opacity: 0.8;
+}
+
+.file-drop-area .drop-text {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.file-drop-area.has-file {
+    border-color: #10b981;
+    background-color: rgba(16, 185, 129, 0.05);
+}
+
+.file-drop-area.has-file .drop-text {
+    color: #34d399;
+    font-weight: 500;
+}
+
+/* Toast System (Base) */
+#toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 9999;
+}
+
+.toast {
+    background: rgba(18, 18, 20, 0.95);
+    backdrop-filter: blur(10px);
+    border-left: 4px solid var(--primary);
+    padding: 16px 24px;
+    border-radius: var(--border-radius-md);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transform: translateX(120%);
+    transition: transform var(--transition-smooth);
+}
+
+.toast.error {
+    border-left-color: #ef4444;
+}
+
+.toast.show {
+    transform: translateX(0);
+}
+
+.toast-icon {
+    font-size: 1.2rem;
+}
+
+.toast-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.toast-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: white;
+}
+
+.toast-message {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* ==========================================
+   ORDENIS PREMIUM CRYPTO-CERTIFICATE STYLES 
+   ========================================== */
+
+/* Animación de brillo para el Sello Metálico */
+@keyframes metallicGlow {
+    0% { filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.4)) brightness(1); }
+    50% { filter: drop-shadow(0 0 16px rgba(212, 175, 55, 0.8)) brightness(1.2); }
+    100% { filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.4)) brightness(1); }
+}
+
+.certificate-paper {
+    background: #fdfdfb;
+    background-image: 
+        radial-gradient(circle at 100% 150%, #f7f6f0 24%, #fdfdfb 25%),
+        radial-gradient(circle at 0% -50%, #f7f6f0 24%, #fdfdfb 25%);
+    color: #1b1b1d !important;
+    padding: 3.5rem;
+    position: relative;
+    border-radius: 4px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    font-family: 'Inter', 'Georgia', serif;
+    overflow: hidden;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+
+/* Doble Marco de Seguridad Criptográfica (Oro Metálico y Cobalto) */
+.certificate-paper::before {
+    content: "";
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    right: 15px;
+    bottom: 15px;
+    border: 3px double #BF953F;
+    border-image: linear-gradient(135deg, #BF953F 0%, #FCF6BA 30%, #B38728 50%, #FBF5B7 70%, #AA771C 100%) 3;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.certificate-paper::after {
+    content: "";
+    position: absolute;
+    top: 23px;
+    left: 23px;
+    right: 23px;
+    bottom: 23px;
+    border: 1px solid rgba(59, 130, 246, 0.15);
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* Marca de Agua de Alta Seguridad de ORDENIS */
+.certificate-watermark {
+    position: absolute;
+    top: 52%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 65%;
+    height: auto;
+    opacity: 0.022;
+    z-index: 1;
+    pointer-events: none;
+    user-select: none;
+}
+
+.certificate-content {
+    position: relative;
+    z-index: 2;
+}
+
+/* Cabecera del Certificado */
+.certificate-header-container {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    border-bottom: 2px solid rgba(191, 149, 63, 0.2);
+    padding-bottom: 1.5rem;
+    position: relative;
+}
+
+.certificate-registry-id {
+    font-family: 'Inter', monospace;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #b8860b;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+    display: inline-block;
+    background: rgba(212, 175, 55, 0.08);
+    padding: 4px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.certificate-brand-title {
+    font-family: 'Georgia', serif;
+    font-weight: 900;
+    font-size: 2.6rem;
+    letter-spacing: 4px;
+    color: #1e293b;
+    margin-bottom: 0.2rem;
+}
+
+.certificate-subtitle {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 5px;
+    color: #3b82f6;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.certificate-document-type-title {
+    font-family: 'Georgia', serif;
+    font-size: 1.6rem;
+    color: #0f172a;
+    font-style: italic;
+    font-weight: 600;
+}
+
+.certificate-legal-declaration {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: #334155;
+    text-align: center;
+    margin: 2rem 1.5rem;
+    font-style: italic;
+}
+
+/* Tabla de Información Enmarcada Premium */
+.certificate-info-box {
+    background: rgba(248, 250, 252, 0.7);
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+    position: relative;
+    z-index: 3;
+}
+
+.certificate-info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px dashed #e2e8f0;
+    font-size: 0.9rem;
+}
+
+.certificate-info-row:last-child {
+    border-bottom: none;
+}
+
+.certificate-info-label {
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    width: 220px;
+    flex-shrink: 0;
+}
+
+.certificate-info-value {
+    color: #0f172a;
+    font-weight: 500;
+    text-align: left;
+    flex-grow: 1;
+}
+
+.certificate-hash-block {
+    font-family: 'Inter', monospace;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #1e293b;
+    background: #f1f5f9;
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid #cbd5e1;
+    word-break: break-all;
+    display: inline-block;
+    margin-top: 4px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* Pie de Página del Certificado */
+.certificate-footer-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2.5rem;
+    gap: 1.5rem;
+}
+
+/* 1. Sello de Firmas */
+.certificate-signatures {
+    display: flex;
+    flex-direction: column;
+    width: 220px;
+}
+
+.certificate-signature-line {
+    border-top: 1px solid #94a3b8;
+    margin-top: 2.2rem;
+    text-align: center;
+    padding-top: 0.5rem;
+}
+
+.certificate-signature-title {
+    font-size: 0.7rem;
+    color: #64748b;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.certificate-signature-caligraphy {
+    font-family: 'Georgia', serif;
+    font-size: 1.25rem;
+    color: #1d4ed8;
+    font-style: italic;
+    height: 35px;
+    line-height: 35px;
+    user-select: none;
+    margin-bottom: -10px;
+    text-shadow: 1px 1px 2px rgba(29, 78, 216, 0.15);
+}
+
+/* 2. Sello de Estándares Internacionales */
+.certificate-compliance-badges {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.compliance-badge-circle {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    border: 1px solid rgba(191, 149, 63, 0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    font-size: 0.45rem;
+    font-weight: 700;
+    color: #b8860b;
+    text-align: center;
+    line-height: 1.2;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.compliance-badge-circle strong {
+    font-size: 0.6rem;
+    color: #1e293b;
+}
+
+/* 3. Sello Holográfico de Cera de Alta Gama (El "Chuchú") */
+.certificate-hologram-seal {
+    width: 105px;
+    height: 105px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #FCF6BA 0%, #BF953F 45%, #b8860b 80%, #AA771C 100%);
+    box-shadow: 
+        0 4px 15px rgba(0, 0, 0, 0.15),
+        inset 0 -4px 10px rgba(0,0,0,0.3),
+        inset 0 4px 10px rgba(255,255,255,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    user-select: none;
+    flex-shrink: 0;
+    border: 1px solid #AA771C;
+    animation: metallicGlow 4s infinite ease-in-out;
+}
+
+.certificate-hologram-inner {
+    width: 89px;
+    height: 89px;
+    border-radius: 50%;
+    border: 2px dashed rgba(255, 255, 255, 0.7);
+    background: radial-gradient(circle, #BF953F 0%, #b8860b 60%, #AA771C 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    text-align: center;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.certificate-hologram-icon {
+    font-size: 1.6rem;
+    margin-bottom: 2px;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+}
+
+.certificate-hologram-text {
+    font-size: 0.45rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #fef08a;
+    line-height: 1.2;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+/* 4. Código QR Dinámico */
+.certificate-qr-code-wrapper {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+
+.certificate-qr-code-wrapper img {
+    display: block;
+    width: 90px;
+    height: 90px;
+}
+
+/* Soporte Avanzado para Impresión */
+@media print {
+    .certificate-paper {
+        background: #fdfdfb !important;
+        box-shadow: none !important;
+        padding: 2.5rem !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        print-color-adjust: exact !important;
+        -webkit-print-color-adjust: exact !important;
+    }
+    
+    .certificate-watermark {
+        opacity: 0.03 !important;
+    }
+
+    .certificate-info-box {
+        background: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+    }
+
+    .certificate-hologram-seal {
+        background: radial-gradient(circle, #FCF6BA 0%, #BF953F 45%, #b8860b 80%, #AA771C 100%) !important;
+        -webkit-print-color-adjust: exact !important;
+    }
+
+    .certificate-hologram-inner {
+        background: radial-gradient(circle, #BF953F 0%, #b8860b 60%, #AA771C 100%) !important;
+        -webkit-print-color-adjust: exact !important;
+    }
+}
+
+/* ==========================================
+   ORDENIS REGISTRY WIZARD & BIOMETRIC STYLES 
+   ========================================== */
+
+/* Indicador de Pasos del Wizard */
+.wizard-steps-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    padding: 0 10px;
+}
+
+.step-indicator {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all var(--transition-smooth);
+    position: relative;
+    z-index: 2;
+}
+
+.step-indicator.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+}
+
+.step-indicator.completed {
+    background: #10b981;
+    border-color: #10b981;
+    color: #fff;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+}
+
+.step-connector {
+    flex-grow: 1;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.05);
+    margin: 0 10px;
+    position: relative;
+    z-index: 1;
+    transition: background var(--transition-smooth);
+}
+
+.step-connector.completed {
+    background: linear-gradient(90deg, var(--primary) 0%, #10b981 100%);
+}
+
+/* Secciones del Wizard */
+.wizard-step {
+    display: none;
+    animation: fadeInStep 0.4s ease-in-out forwards;
+}
+
+.wizard-step.active {
+    display: block;
+}
+
+@keyframes fadeInStep {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Navegación del Wizard */
+.wizard-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 1.5rem;
+}
+
+.wizard-actions .btn-primary, .wizard-actions .btn-secondary {
+    margin: 0;
+    flex: 1;
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius-md);
+    padding: 0.875rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Contenedor de Cámara Web (Biometría) */
+.webcam-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 380px;
+    height: 280px;
+    margin: 1.5rem auto;
+    border-radius: var(--border-radius-md);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    background: #000;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.webcam-wrapper.scanning {
+    border-color: var(--primary);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+.webcam-wrapper.success {
+    border-color: #10b981;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+}
+
+.webcam-wrapper.error {
+    border-color: #ef4444;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+}
+
+#webcam {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1); /* Efecto espejo */
+}
+
+/* Óvalo Guía de Rostro */
+.face-oval-guide {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 180px;
+    height: 220px;
+    border: 2px dashed rgba(59, 130, 246, 0.5);
+    border-radius: 50% / 50%;
+    pointer-events: none;
+    z-index: 10;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4);
+    transition: border-color var(--transition-fast), border-style var(--transition-fast);
+}
+
+.webcam-wrapper.success .face-oval-guide {
+    border-color: #10b981;
+    border-style: solid;
+}
+
+.webcam-wrapper.error .face-oval-guide {
+    border-color: #ef4444;
+    border-style: solid;
+}
+
+/* Guía Rectangular para Documento */
+.doc-rectangle-guide {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 280px;
+    height: 180px;
+    border: 2px dashed rgba(59, 130, 246, 0.5);
+    border-radius: 8px;
+    pointer-events: none;
+    z-index: 10;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4);
+    transition: border-color var(--transition-fast), border-style var(--transition-fast);
+}
+
+.webcam-wrapper.success .doc-rectangle-guide {
+    border-color: #10b981;
+    border-style: solid;
+}
+
+.webcam-wrapper.error .doc-rectangle-guide {
+    border-color: #ef4444;
+    border-style: solid;
+}
+
+/* Escáner Láser de Biometría */
+.biometry-laser-scanner {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #3B82F6 20%, #8B5CF6 50%, #3B82F6 80%, transparent);
+    box-shadow: 0 0 15px #3B82F6, 0 0 5px #8B5CF6;
+    z-index: 11;
+    pointer-events: none;
+    display: none;
+}
+
+.webcam-wrapper.scanning .biometry-laser-scanner {
+    display: block;
+    animation: laserScan 2.2s infinite ease-in-out;
+}
+
+@keyframes laserScan {
+    0% { top: 0%; }
+    50% { top: 98%; }
+    100% { top: 0%; }
+}
+
+/* Estado Biométrico y Resultados */
+.biometry-status-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--border-radius-md);
+    padding: 12px 16px;
+    margin: 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.biometry-status-loader {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s infinite linear;
+    flex-shrink: 0;
+}
+
+.biometry-status-loader.hidden {
+    display: none;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.biometry-status-text {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    flex-grow: 1;
+}
+
+.biometry-matched-score {
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-family: monospace;
+    color: #10b981;
+    display: none;
+}
+
+/* AI Secretary Chat Widget Styles */
+.ai-widget {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    font-family: 'Inter', sans-serif;
+}
+
+.ai-trigger-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--gradient-brand);
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.ai-trigger-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 30px rgba(139, 92, 246, 0.5);
+}
+
+.ai-trigger-icon {
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+.ai-trigger-pulse {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid #8B5CF6;
+    animation: triggerPulse 2s infinite;
+    pointer-events: none;
+}
+
+@keyframes triggerPulse {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(1.4); opacity: 0; }
+}
+
+.ai-chat-drawer {
+    position: absolute;
+    bottom: 80px;
+    right: 0;
+    width: 380px;
+    height: 520px;
+    background: rgba(18, 18, 20, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--border-radius-md);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: opacity var(--transition-smooth), transform var(--transition-smooth);
+    transform-origin: bottom right;
+}
+
+.ai-chat-drawer.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: scale(0.85) translateY(20px);
+}
+
+.chat-header {
+    padding: 16px 20px;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-header-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.chat-avatar {
+    font-size: 1.5rem;
+}
+
+.chat-header-info h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: white;
+}
+
+.chat-status {
+    font-size: 0.75rem;
+    color: #10b981;
+    display: block;
+    margin-top: 1px;
+}
+
+.close-chat-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: color var(--transition-fast);
+}
+
+.close-chat-btn:hover {
+    color: white;
+}
+
+.chat-messages {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.chat-message {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: var(--border-radius-md);
+    font-size: 0.88rem;
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.chat-message p {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.chat-message strong {
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.chat-message.system strong {
+    color: #a78bfa; /* Soft purple to make key terms stand out in the dark assistant bubble */
+}
+
+.chat-message code {
+    background: rgba(255, 255, 255, 0.12);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.85em;
+    color: #e4e4e7;
+}
+
+.chat-link {
+    color: #60a5fa;
+    text-decoration: underline;
+    transition: color 0.2s ease;
+}
+
+.chat-link:hover {
+    color: #93c5fd;
+}
+
+.chat-message.system {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    color: var(--text-primary);
+    align-self: flex-start;
+    border-bottom-left-radius: 2px;
+}
+
+.chat-message.user {
+    background: var(--gradient-brand);
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 2px;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.message-time {
+    font-size: 0.7rem;
+    opacity: 0.5;
+    text-align: right;
+}
+
+.chat-suggestions {
+    display: flex;
+    gap: 8px;
+    padding: 10px 20px;
+    overflow-x: auto;
+    background: rgba(0, 0, 0, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.chat-suggestions::-webkit-scrollbar {
+    display: none;
+}
+
+.suggest-btn {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all var(--transition-fast);
+}
+
+.suggest-btn:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.chat-form {
+    padding: 16px 20px;
+    background: rgba(255, 255, 255, 0.02);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    gap: 12px;
+}
+
+.chat-form input {
+    flex-grow: 1;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: 10px 14px;
+    color: white;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color var(--transition-fast);
+}
+
+.chat-form input:focus {
+    border-color: var(--primary);
+}
+
+.send-chat-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--border-radius-md);
+    background: var(--gradient-brand);
+    border: none;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: opacity var(--transition-fast);
+}
+
+.send-chat-btn:hover {
+    opacity: 0.9;
+}
+
+@media (max-width: 480px) {
+    .ai-chat-drawer {
+        width: calc(100vw - 32px);
+        height: 480px;
+        right: -8px;
+    }
+}
+
+/* Floating Chat Button Widget */
+.floating-chat-trigger {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--gradient-brand, linear-gradient(135deg, #2563eb 0%, #8b5cf6 100%));
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 10px 30px rgba(37, 99, 235, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    cursor: pointer;
+    z-index: 9998;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.floating-chat-trigger:hover {
+    transform: scale(1.08) rotate(5deg);
+    box-shadow: 0 12px 35px rgba(139, 92, 246, 0.5);
+}
+
+.floating-chat-trigger .badge-pulse {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #10b981;
+    border: 2px solid #0f172a;
+    animation: chatPulse 2s infinite;
+}
+
+@keyframes chatPulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* Quick Suggestion Chips */
+.chat-chips-container {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 8px 12px;
+    scrollbar-width: thin;
+}
+
+.chat-chip {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text-secondary, #94a3b8);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.chat-chip:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: #3b82f6;
+    color: #ffffff;
+}
+
+/* Message Markdown Tables & Code Blocks */
+.chat-msg pre {
+    background: rgba(0, 0, 0, 0.4);
+    padding: 10px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-family: monospace;
+    font-size: 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chat-msg table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0;
+    font-size: 0.8rem;
+}
+
+.chat-msg th, .chat-msg td {
+    padding: 6px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: left;
+}
+
+.chat-msg th {
+    background: rgba(59, 130, 246, 0.2);
+    color: white;
+}
+
